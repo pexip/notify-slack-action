@@ -3,17 +3,6 @@
 /* jshint strict:false */
 const https = require("https");
 
-// Get an action colour based on workflow status
-function actionColor(status) {
-    switch(status) {
-        case "success":
-            return "good";
-        case "failure":
-            return "danger";
-        default:
-            return "warning";
-    }
-}
 // Get a transformed status based on workflow status
 function actionStatus(status) {
     switch(status) {
@@ -71,7 +60,6 @@ function constructPayload(inputs, callback) {
         run_url: `https://github.com/${repo}/actions/runs/${run_id}`,
         job: job,
         workflow: workflow,
-        color: actionColor(job_status),
         status_message: actionStatus(job_status),
         emoji: actionEmoji(job_status, icon_success, icon_failure, icon_warnings),
     };
@@ -114,15 +102,33 @@ function constructPayload(inputs, callback) {
     }
 
     const payload = {
-        "attachments": [
+        "blocks": [{
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": title,
+                    "emoji": true,
+                },
+            },
             {
-                "text": message,
-                "fallback": title,
-                "color": patterns.color,
-                "mrkdwn_in": ["text"],
-                "footer": footer,
-            }
-        ]
+                "type": "divider",
+            },
+            {
+                "type": "section",
+                "expand": false,
+                "text": {
+                    "type": "mrkdwn",
+                    "text": message,
+                },
+            },
+            {
+                "type": "context",
+                "elements": [{
+                    "type": "mrkdwn",
+                    "text": footer,
+                }],
+            },
+        ],
     };
 
     callback(JSON.stringify(payload));
